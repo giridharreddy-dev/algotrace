@@ -1,5 +1,11 @@
 # Changes
 
+## 2.0.1 — 28 October 2026
+
+- Replaced the sage/cream/orange palette with white panels, navy text and blue accents throughout the browser interface.
+- Improved text contrast, active-step emphasis and focus indicators; simplified the logo and removed decorative serif typography.
+- Reorganized the stylesheet into readable sections and reusable color tokens. Algorithm behavior is unchanged.
+
 ## 2.0.0 — 28 October 2026
 
 - Expanded from 6 to 32 algorithms: 8 searches, 14 sorts and 10 array techniques.

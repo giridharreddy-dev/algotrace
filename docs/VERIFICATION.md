@@ -35,3 +35,10 @@ Playback, pause, reverse stepping, JSON export, saved-note refresh persistence, 
 ## Scope
 
 This is an educational local application. It is not validated as a production hosting server, and tests do not establish the owner's independent mastery. Operation counters intentionally omit loop conditions, arithmetic, hash lookups and auxiliary-table updates. Complexity excludes tracing, serialization and result-copy overhead. Notes remain in local browser storage.
+
+## Blue-and-white theme — 2.0.1
+
+- Replaced the palette in all form, trace, state, comparison and navigation styles; updated the logo and typography.
+- Inspected the narrow layout and the desktop breakpoint at a 1280 × 800 viewport, then reset the viewport override.
+- Verified a trace's blue active bars and playback controls, and completed a 14-sort comparison with no browser error-level logs.
+- Algorithm implementations were not changed for this visual update. The 33-test algorithm/API/CLI results above are retained; the backend suite was not rerun for a stylesheet-only behavior change.
