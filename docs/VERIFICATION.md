@@ -1,36 +1,37 @@
-# Verification — 28 October 2026
+# Verification — AlgoTrace 2.0, 28 October 2026
 
-Environment: Windows, Python 3.14.3, a local in-app browser, and Node.js for a JavaScript syntax check. No third-party Python dependency was installed.
+Environment: Windows, Python 3.14.3, a local in-app browser, and Node.js for JavaScript syntax checking. No third-party Python packages are required.
 
 ## Automated results
 
-`python -m unittest discover -s tests -v`: **16 test methods passed**.
+`python -m unittest discover -s tests -v`: **33 test methods passed**.
 
-- All four sorts matched Python's `sorted` on 106 inputs each (424 sort cases): empty, singleton, duplicates, negatives, ascending, descending and seeded random arrays.
-- Linear and binary searches matched reference expectations over 1,000 search cases. Linear returns the first match; binary returns a valid match or -1.
-- Exact operation counters were checked on a known three-value example.
-- A 128-value descending bubble-sort input completed with 8,128 comparisons and 8,128 swaps even when its recorded trace was capped.
-- Input validation, caller-list immutability, independent trace snapshots and monotonic counters passed.
-- Real HTTP requests tested assets, catalog, run/compare, malformed input, body size, Host/Origin checks and the static allowlist.
-- CLI checks covered successful search, sort comparison with empty input and an invalid unsorted binary-search request.
+- All 32 catalog identifiers have distinct implementations, metadata and pseudocode. Categories contain 8 searches, 14 sorts and 10 array techniques.
+- All sorts matched Python's `sorted` on seeded examples. Additional exhaustive small-array checks cover duplicates and negative keys. Boundary tests cover 128 items and extreme signed keys; counting sort's bounded range is tested separately.
+- All eight searches matched reference expectations on exhaustive small sorted arrays with duplicate keys, plus empty, boundary and large-equal cases. First-occurrence searches specifically return the first matching index.
+- Kadane's maximum sum, majority element, two sum, fixed-window sums and LIS were checked against independent brute-force or enumeration references.
+- Prefix sums, running maxima, reversal, signed rotation and deduplication were checked against reference results.
+- Exact counters, caller-list immutability, trace caps, state-snapshot independence, active indices and pseudocode line ranges passed.
+- Real HTTP requests exercised all 32 algorithms, the catalog, assets, comparison endpoint, malformed JSON, invalid parameters, body-size limits, Host/Origin checks and the static file allowlist.
+- Wide-range sort comparison returns a counting-sort skip reason while still completing the other 13 algorithms.
+- CLI checks cover search, empty sort comparison, invalid input, category listing and parameterized array operations.
 
 `node --check algotrace/web/app.js`: passed.
 
-## Browser checks
+## Browser results for version 2
 
-- Initial lab rendered with all six algorithm choices, input, counters, chart and pseudocode.
-- Bubble sort on `[3, 2, 1]`: stepping displayed the first comparison; the final frame displayed `[1, 2, 3]`, 3 comparisons, 3 swaps and 6 writes.
-- Four-sort comparison displayed the expected counts for that same input.
-- Binary search rejected `[3, 2, 1]` and explained the ascending-input requirement.
-- After explicitly sorting to `[1, 2, 3]`, target 2 returned index 1 with one comparison.
-- A note explicitly labeled “Demo note” was saved and restored after refresh.
-- Play advanced through multiple events; pause stopped it. Range navigation reached the final frame.
-- JSON run export downloaded successfully; its parsed result and 54 recorded events matched the default eight-value example.
-- A large reverse input showed 15,884 omitted intermediate events and retained the correct final sorted array and complete counts.
-- Empty input completed as `[]`.
-- A 390-pixel-wide viewport was inspected. Playback controls wrap to fit; there was no document-level horizontal overflow. The viewport was reset afterward.
-- No browser error-level logs were reported during inspection.
+- All 32 options were selected, run and scrubbed to completion through the normal UI on `[1, 2, 2, 3, 5]`. Searches used target 2; parameterized array techniques used their displayed defaults. The captured results are in `BROWSER-CHECKS.json`.
+- All 14 sorts displayed `[1, 2, 2, 3, 5]`; search results were valid duplicate-match indices; array results rendered correctly as lists, objects or null.
+- Category filtering and algorithm search worked. A nonexistent query displayed zero matches and disabled Run; clearing/replacing the query recovered normally.
+- Kadane's example `[-2, 1, -3, 4, -1, 2, 1, -5, 4]` displayed sum 6 at indices 3–6, with the working state showing the best interval.
+- Comparing `[-1000000, 0, 1000000]` displayed 14 rows: counting sort was skipped with its range explanation; the other 13 completed. Distribution sorts were marked separately and excluded from comparison-only winner highlighting.
+- The existing saved demo note survived the version update.
+- No browser error-level logs were reported during this inspection.
+
+## Retained version 1 checks
+
+Playback, pause, reverse stepping, JSON export, saved-note refresh persistence, the visible large-trace truncation warning, empty sorting input and the 390-pixel layout were checked in version 1. Version 2's changed controls and working-state panel were additionally inspected at desktop and narrow widths before publication. This is not a complete cross-browser or accessibility audit.
 
 ## Scope
 
-These checks validate this educational implementation. They do not establish production hosting readiness, cross-browser compatibility, a full accessibility audit, or independent mastery by the owner. Notes use local browser storage; no account or cross-device sync exists.
+This is an educational local application. It is not validated as a production hosting server, and tests do not establish the owner's independent mastery. Operation counters intentionally omit loop conditions, arithmetic, hash lookups and auxiliary-table updates. Complexity excludes tracing, serialization and result-copy overhead. Notes remain in local browser storage.

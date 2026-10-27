@@ -1,6 +1,7 @@
 """Pure algorithms and a bounded trace recorder; no web or UI dependencies."""
 
 from dataclasses import dataclass
+from copy import deepcopy
 from typing import Callable
 
 MAX_ITEMS = 128
@@ -17,6 +18,10 @@ class Algorithm:
     space: str
     note: str
     pseudocode: tuple[str, ...]
+    parameter: str | None = None
+    parameter_default: int = 15
+    sorted_input: bool = False
+    family: str = "comparison"
 
 
 CATALOG = {
@@ -25,7 +30,7 @@ CATALOG = {
         ("for each index i:", "    compare values[i] with target", "    if equal: return i", "return -1")),
     "binary": Algorithm("Binary search", "search", "O(1)", "O(log n)", "O(log n)", "O(1)",
         "Requires ascending input. Returns one matching index; duplicates need not return the first. Sorting cost is not included.",
-        ("low = 0; high = length - 1", "while low <= high:", "    mid = (low + high) // 2", "    compare values[mid] with target", "    if equal: return mid", "    if smaller: low = mid + 1", "    otherwise: high = mid - 1", "return -1")),
+        ("low = 0; high = length - 1", "while low <= high:", "    mid = (low + high) // 2", "    compare values[mid] with target", "    if equal: return mid", "    if smaller: low = mid + 1", "    otherwise: high = mid - 1", "return -1"), sorted_input=True),
     "bubble": Algorithm("Bubble sort", "sort", "O(n)", "O(n²)", "O(n²)", "O(1)",
         "Adjacent swaps move the largest remaining value right. An unchanged pass stops early. Stable.",
         ("for end from length - 1 down to 1:", "    changed = false", "    for i from 0 to end - 1:", "        compare values[i] and values[i + 1]", "        if out of order: swap; changed = true", "    if unchanged: stop")),
@@ -58,14 +63,17 @@ class Recorder:
         self.limit = limit
         self.counts = {"comparisons": 0, "swaps": 0, "writes": 0}
         self.total_events = 0
+        self.state: dict = {}
         self.event("start", "Input ready. No operations yet.", 0)
 
-    def event(self, kind: str, message: str, line: int, active=(), window=None, force=False):
+    def event(self, kind: str, message: str, line: int, active=(), window=None, force=False, state=None):
+        if state is not None:
+            self.state = state
         self.total_events += 1
         if len(self.events) < self.limit or force:
             self.events.append({"kind": kind, "message": message, "line": line,
                 "array": self.values.copy(), "active": list(active), "window": window,
-                "counts": self.counts.copy(), "sequence": self.total_events})
+                "counts": self.counts.copy(), "sequence": self.total_events, "state": deepcopy(self.state)})
 
     def compare(self, left: int, right: int, indices: tuple[int, ...], line: int) -> int:
         self.counts["comparisons"] += 1
@@ -178,6 +186,10 @@ def merge(rec: Recorder, _):
 RUNNERS: dict[str, Callable] = {"linear": linear, "binary": binary, "bubble": bubble,
     "insertion": insertion, "selection": selection, "merge": merge}
 
+from .extra import EXTRA_RUNNERS, definitions
+CATALOG.update(definitions(Algorithm))
+RUNNERS.update(EXTRA_RUNNERS)
+
 
 def run_algorithm(name: str, values: object, target=None, trace_limit=500) -> dict:
     if not isinstance(name, str) or name not in CATALOG:
@@ -186,23 +198,35 @@ def run_algorithm(name: str, values: object, target=None, trace_limit=500) -> di
     if type(trace_limit) is not int or not 1 <= trace_limit <= 1000:
         raise ValueError("Trace limit must be an integer from 1 to 1000.")
     spec = CATALOG[name]
-    if spec.category == "search" and (type(target) is not int or abs(target) > MAX_ABSOLUTE_VALUE):
-        raise ValueError("Search needs an integer target between -1000000 and 1000000.")
-    if name == "binary" and any(a > b for a, b in zip(clean, clean[1:])):
-        raise ValueError("Binary search requires ascending input. Use 'Sort input' first; sorting is a separate operation.")
+    if (spec.category == "search" or spec.parameter) and (type(target) is not int or abs(target) > MAX_ABSOLUTE_VALUE):
+        raise ValueError(f"{spec.parameter or 'Search target'} needs an integer between -1000000 and 1000000.")
+    if spec.sorted_input and any(a > b for a, b in zip(clean, clean[1:])):
+        raise ValueError(f"{spec.title} requires ascending input. Use 'Sort input' first; sorting is a separate operation.")
+    if name == "sliding_window" and not 1 <= target <= len(clean):
+        raise ValueError("Window size must be from 1 to the input length; empty input has no valid window.")
+    if name == "counting" and clean and max(clean) - min(clean) > 4095:
+        raise ValueError("Counting sort supports a value range of at most 4096 (maximum - minimum + 1). Choose another sort for wide ranges.")
     rec = Recorder(clean, trace_limit)
     result = RUNNERS[name](rec, target)
-    message = (f"Search complete: index {result}." if result != -1 else "Target not found.") if spec.category == "search" else "Complete. The array is sorted."
+    message = ((f"Search complete: index {result}." if result != -1 else "Target not found.")
+        if spec.category == "search" else "Complete. The array is sorted." if spec.category == "sort" else "Complete. Inspect the result and working state.")
     rec.event("complete", message, 0, force=True)
     return {"algorithm": name, "title": spec.title, "category": spec.category,
-        "input": clean, "target": target if spec.category == "search" else None,
+        "input": clean, "target": target if spec.category == "search" or spec.parameter else None,
         "result": result, "counts": rec.counts, "events": rec.events,
         "total_events": rec.total_events, "omitted_events": rec.total_events - len(rec.events),
-        "counting_note": "Comparisons count three-way key comparisons, not loop checks. Swaps count as two main-array writes. Tracing memory is excluded from algorithm space complexity."}
+        "counting_note": "Comparisons count explicit key comparisons, not loop checks, arithmetic or hash lookups. Swaps count as two main-array writes. Auxiliary updates and tracing memory are excluded from these counters. Complexity excludes trace storage."}
 
 
 def compare_sorts(values: object) -> list[dict]:
     clean = validate_values(values)
-    return [{key: value for key, value in run_algorithm(name, clean, trace_limit=1).items()
-        if key in ("algorithm", "title", "result", "counts")}
-        for name, spec in CATALOG.items() if spec.category == "sort"]
+    results = []
+    for name, spec in CATALOG.items():
+        if spec.category != "sort":
+            continue
+        try:
+            run = run_algorithm(name, clean, trace_limit=1)
+            results.append({key: run[key] for key in ("algorithm", "title", "result", "counts")} | {"family": spec.family})
+        except ValueError as error:
+            results.append({"algorithm": name, "title": spec.title, "family": spec.family, "skipped": str(error)})
+    return results

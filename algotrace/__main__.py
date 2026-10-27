@@ -12,12 +12,19 @@ def main():
     sub = parser.add_subparsers(dest="command")
     serve = sub.add_parser("serve", help="Start the browser lab on 127.0.0.1")
     serve.add_argument("--port", type=int, default=8765)
+    listing = sub.add_parser("list", help="List algorithm identifiers and categories")
+    listing.add_argument("--category", choices=("all", "sort", "search", "array"), default="all")
     run = sub.add_parser("run", help="Print a JSON result and trace")
     run.add_argument("algorithm", choices=CATALOG)
     run.add_argument("--values", default="12,7,19,3,15,8,2,11")
-    run.add_argument("--target", type=int)
-    run.add_argument("--compare", action="store_true", help="Compare all four sorts on this input")
+    run.add_argument("--target", type=int, help="Search target, two-sum target, window size, or rotation positions")
+    run.add_argument("--compare", action="store_true", help="Compare all 14 sorts on this input")
     args = parser.parse_args()
+    if args.command == "list":
+        for name, spec in CATALOG.items():
+            if args.category in ("all", spec.category):
+                print(f"{name:20} {spec.category:8} {spec.title}")
+        return
     if args.command == "run":
         try:
             values = [] if not args.values.strip() else [int(part.strip()) for part in args.values.split(",")]

@@ -33,12 +33,16 @@ Then run the CLI or browser and check the prediction. Repeat with target `9` and
 - Why does counting comparisons not measure total runtime?
 - Why does trace storage use more memory than the underlying algorithm alone?
 - Why are merge comparisons described by values rather than active main-array indices? (They use copied halves.)
+- Why can radix sort do substantial work without many key comparisons?
+- Why does first-occurrence binary search keep searching after a match?
+- Why does Kadane's algorithm work on an all-negative input without returning an empty subarray?
+- What does `lengths[i]` mean in LIS, and why do duplicate keys not extend it?
 
 ## Three independent extensions
 
 Do one at a time, writing tests before calling the work complete.
 
-1. **First occurrence:** add a binary-search mode that returns the first duplicate match. Test a match at either boundary, all-equal input and missing targets.
+1. **Last occurrence:** extend the existing first-occurrence binary search to return the last duplicate match. Test either boundary, all-equal input and missing targets.
 2. **Find the mistake:** add a prediction question before selected steps, showing feedback only after the learner answers.
 3. **Compare input shapes:** run the same sorts on ascending, descending, duplicate-heavy and random input of the same size. Explain that generating a dataset is separate from sorting it.
 

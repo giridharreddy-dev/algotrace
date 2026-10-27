@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from algotrace.server import make_server
+from algotrace.algorithms import CATALOG
 
 
 class ServerTests(unittest.TestCase):
@@ -45,7 +46,7 @@ class ServerTests(unittest.TestCase):
             self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
         status, body, _ = self.fetch("/api/catalog")
         self.assertEqual(status, 200)
-        self.assertEqual(len(json.loads(body)), 6)
+        self.assertEqual(len(json.loads(body)), 32)
 
     def test_run_and_compare_end_to_end(self):
         status, body, _ = self.fetch("/api/run", {"algorithm": "merge", "values": [7, 1, -2]})
@@ -53,7 +54,25 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(json.loads(body)["result"], [-2, 1, 7])
         status, body, _ = self.fetch("/api/compare", {"values": [7, 1, -2]})
         self.assertEqual(status, 200)
-        self.assertEqual(len(json.loads(body)["results"]), 4)
+        self.assertEqual(len(json.loads(body)["results"]), 14)
+
+    def test_every_algorithm_through_http(self):
+        for name, spec in CATALOG.items():
+            target = 2 if spec.category == "search" else spec.parameter_default if spec.parameter else None
+            with self.subTest(algorithm=name):
+                status, body, _ = self.fetch("/api/run", {"algorithm": name, "values": [1, 2, 2, 3, 5], "target": target})
+                self.assertEqual(status, 200, body)
+                payload = json.loads(body)
+                self.assertEqual(payload["events"][-1]["kind"], "complete")
+                self.assertEqual(payload["algorithm"], name)
+
+    def test_parameter_validation_and_skipped_sort_through_http(self):
+        status, body, _ = self.fetch("/api/run", {"algorithm": "sliding_window", "values": [1, 2], "target": 3})
+        self.assertEqual(status, 400)
+        self.assertIn("Window size", json.loads(body)["error"])
+        status, body, _ = self.fetch("/api/compare", {"values": [-1000000, 1000000]})
+        self.assertEqual(status, 200)
+        self.assertEqual([row["algorithm"] for row in json.loads(body)["results"] if "skipped" in row], ["counting"])
 
     def test_bad_requests(self):
         cases = [({"algorithm": "binary", "values": [3, 1], "target": 1}, "ascending"),
@@ -96,12 +115,21 @@ class CommandLineTests(unittest.TestCase):
     def test_compare_and_empty_cli(self):
         result = self.invoke("run", "bubble", "--values", "", "--compare")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(json.loads(result.stdout)), 4)
+        self.assertEqual(len(json.loads(result.stdout)), 14)
 
     def test_invalid_cli(self):
         result = self.invoke("run", "binary", "--values", "4,2", "--target", "2")
         self.assertEqual(result.returncode, 2)
         self.assertIn("ascending", result.stderr)
+
+    def test_listing_cli_and_array_parameter(self):
+        result = self.invoke("list", "--category", "search")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(result.stdout.strip().splitlines()), 8)
+        self.assertIn("fibonacci_search", result.stdout)
+        result = self.invoke("run", "sliding_window", "--values", "1,2,3,4", "--target", "2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["result"], {"sum": 7, "start": 2, "end": 3})
 
 
 if __name__ == "__main__":

@@ -92,7 +92,7 @@ class AlgorithmTests(unittest.TestCase):
     def test_comparison_runs_share_input_and_agree(self):
         values = [8, -3, 8, 0]
         results = compare_sorts(values)
-        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results), 14)
         self.assertEqual({tuple(result["result"]) for result in results}, {tuple(sorted(values))})
         self.assertEqual(values, [8, -3, 8, 0])
         self.assertTrue(all("events" not in result for result in results))
