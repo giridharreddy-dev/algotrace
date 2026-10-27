@@ -43,8 +43,8 @@ Then run the CLI or browser and check the prediction. Repeat with target `9` and
 Do one at a time, writing tests before calling the work complete.
 
 1. **Last occurrence:** extend the existing first-occurrence binary search to return the last duplicate match. Test either boundary, all-equal input and missing targets.
-2. **Find the mistake:** add a prediction question before selected steps, showing feedback only after the learner answers.
-3. **Compare input shapes:** run the same sorts on ascending, descending, duplicate-heavy and random input of the same size. Explain that generating a dataset is separate from sorting it.
+2. **Explain the mistake:** extend the existing prediction mode with one targeted misconception explanation for each incorrect choice.
+3. **Compare input shapes:** extend the existing presets with a summary chart that compares the same sorts on several input shapes at the same size. Keep dataset generation separate from sorting.
 
 ## Honest portfolio description
 

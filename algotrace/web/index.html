@@ -6,7 +6,7 @@
   <meta name="description" content="An offline Python algorithm lab. Trace a search or sort, compare operations and explain the result.">
   <title>AlgoTrace · See why code works</title>
   <link rel="stylesheet" href="/style.css">
-  <script src="/app.js" defer></script>
+  <script src="/app.js" type="module"></script>
 </head>
 <body>
   <aside class="rail">
@@ -22,14 +22,19 @@
     <div class="workspace">
       <section class="panel controls-panel" aria-labelledby="setup-title">
         <div class="panel-heading"><span class="step-badge">01</span><h2 id="setup-title">Set up your experiment</h2></div>
-        <form id="run-form">
+        <form id="run-form" novalidate>
           <label for="category">Category</label><select id="category"><option value="all">All algorithms</option><option value="sort">Sorting · 14</option><option value="search">Searching · 8</option><option value="array">Array techniques · 10</option></select>
           <label class="filter-label" for="algorithm-filter">Find an algorithm</label><input id="algorithm-filter" type="search" placeholder="Try heap, prefix, two sum…" autocomplete="off"><p id="filter-count" class="field-help" role="status"></p>
           <label for="algorithm">Algorithm</label><select id="algorithm" disabled><option value="bubble">Loading algorithms…</option></select>
           <div class="label-line"><label for="values">Your numbers</label><span id="input-count">8 values</span></div>
           <textarea id="values" rows="3" spellcheck="false" aria-describedby="input-help">12, 7, 19, 3, 15, 8, 2, 11</textarea>
           <p class="field-help" id="input-help">Comma-separated integers. Up to 128 values.</p>
-          <div class="sample-buttons"><button type="button" id="sample-random">Mix it up ↻</button><button type="button" id="sample-reverse">Reverse order</button><button type="button" id="sort-input">Sort input ↑</button></div>
+          <details class="preset-box"><summary>Input presets</summary>
+            <label for="preset-kind">Input shape</label><select id="preset-kind"><option value="random">Seeded random</option><option value="nearly">Nearly sorted</option><option value="duplicates">Duplicate-heavy</option><option value="equal">All equal</option><option value="ascending">Ascending</option><option value="reverse">Reverse sorted</option></select>
+            <div class="preset-numbers"><div><label for="preset-size">Size</label><input id="preset-size" type="number" value="8" min="2" max="32" step="1"></div><div><label for="preset-seed">Seed</label><input id="preset-seed" type="number" value="2028" min="0" max="4294967295" step="1"></div></div>
+            <button type="button" id="apply-preset" class="secondary">Apply preset</button><p class="field-help">Same shape, size and seed reproduce the same input.</p>
+          </details>
+          <div class="sample-buttons"><button type="button" id="sample-random">New random seed ↻</button><button type="button" id="sort-input">Sort current input ↑</button></div>
           <div id="target-group" hidden><label id="target-label" for="target">Target value</label><input id="target" type="number" value="15" step="1" min="-1000000" max="1000000"></div>
           <button type="submit" class="primary" id="run-button">Run experiment <span>↗</span></button>
           <p id="error" class="error" role="alert" hidden></p>
@@ -38,22 +43,35 @@
       </section>
       <section class="panel trace-panel" aria-labelledby="trace-title">
         <div class="trace-heading"><div><span class="eyebrow muted">LIVE TRACE</span><h2 id="trace-title">Bubble sort</h2></div><span class="status" id="status">Ready to explore</span></div>
+        <div class="learning-toolbar"><label for="prediction-mode"><input id="prediction-mode" type="checkbox"> Prediction mode</label><span id="practice-score">First answers: 0 / 0 · skipped: 0</span><button id="restart-practice" disabled>Restart questions</button></div>
         <div class="stats"><div><span>COMPARISONS</span><strong id="comparisons">0</strong></div><div><span>SWAPS</span><strong id="swaps">0</strong></div><div><span>ARRAY WRITES</span><strong id="writes">0</strong></div><div><span>INPUT SIZE</span><strong id="size">8</strong></div></div>
         <div id="chart" class="chart" aria-label="Array visualization"></div>
         <div class="chart-legend"><span><i class="legend-neutral"></i>Array value</span><span><i class="legend-active"></i>Active step</span><span class="index-note">Labels below bars are indices</span></div>
         <div class="narration"><span class="pulse-icon">↳</span><div><span class="tiny-label" id="step-label">BEFORE YOU RUN</span><p id="message" aria-live="polite">Which value will move to the end of the first pass?</p></div></div>
+        <section id="prediction-panel" class="prediction-panel" hidden aria-labelledby="prediction-question"><span class="tiny-label">PREDICT BEFORE REVEALING</span><h3 id="prediction-question" tabindex="-1"></h3><div id="prediction-answers" class="prediction-answers" role="group" aria-labelledby="prediction-question"></div><p id="prediction-feedback" role="status"></p><div class="prediction-actions"><button id="prediction-skip">Skip and reveal</button><button id="prediction-continue" class="secondary" hidden>Continue to step →</button></div></section>
         <section id="working-state" class="working-state" hidden aria-label="Algorithm working state"><span class="tiny-label">WORKING STATE</span><dl id="state-values"></dl></section>
         <p class="trace-warning" id="trace-warning" hidden></p>
         <div class="timeline"><input id="step-range" type="range" min="0" max="0" value="0" aria-label="Trace step" disabled><div class="playback"><div class="transport"><button id="reset" aria-label="Go to first step" disabled>↤</button><button id="previous" aria-label="Previous step" disabled>←</button><button id="play" class="play" disabled>Play trace ▷</button><button id="next" aria-label="Next step" disabled>→</button></div><label class="speed-label" for="speed">Speed <select id="speed"><option value="1000">Slow</option><option value="600" selected>Normal</option><option value="200">Fast</option></select></label></div></div>
         <div class="trace-footer"><span id="result">Your result will appear here.</span><button id="export-run" disabled>Export run ↓</button></div>
       </section>
     </div>
+    <section class="panel dual-panel" aria-labelledby="dual-title">
+      <div class="section-label"><span class="step-badge">02</span><h2 id="dual-title">Two algorithms. One input.</h2></div>
+      <p class="muted-text">Use the numbers from the experiment above. Each tick advances one recorded event on each side; the shorter trace holds its final frame. Event counts are not elapsed time.</p>
+      <div class="dual-setup"><div><label for="dual-left">Left sort</label><select id="dual-left" disabled><option value="bubble">Loading…</option></select></div><div><label for="dual-right">Right sort</label><select id="dual-right" disabled><option value="merge">Loading…</option></select></div><button id="dual-run" class="secondary" disabled>Build comparison ↗</button></div>
+      <p id="dual-error" class="error" role="alert" hidden></p><p class="shared-input" id="dual-input">Build a comparison to snapshot the current input.</p>
+      <div class="dual-grid">
+        <section class="dual-card" aria-labelledby="dual-left-title"><div class="dual-card-heading"><h3 id="dual-left-title">Left trace</h3><span id="dual-left-status" class="status">Not built</span></div><div id="dual-left-chart" class="chart dual-chart" aria-label="Left array visualization"></div><p id="dual-left-message" class="dual-message">Choose two sorts and build the comparison.</p><div class="dual-counts" id="dual-left-counts">Comparisons 0 · Swaps 0 · Writes 0</div><p id="dual-left-result" class="dual-result"></p><p id="dual-left-warning" class="trace-warning" hidden></p></section>
+        <section class="dual-card" aria-labelledby="dual-right-title"><div class="dual-card-heading"><h3 id="dual-right-title">Right trace</h3><span id="dual-right-status" class="status">Not built</span></div><div id="dual-right-chart" class="chart dual-chart" aria-label="Right array visualization"></div><p id="dual-right-message" class="dual-message">Choose two sorts and build the comparison.</p><div class="dual-counts" id="dual-right-counts">Comparisons 0 · Swaps 0 · Writes 0</div><p id="dual-right-result" class="dual-result"></p><p id="dual-right-warning" class="trace-warning" hidden></p></section>
+      </div>
+      <div class="dual-timeline"><label class="sr-only" for="dual-range">Comparison tick</label><input id="dual-range" type="range" min="0" max="0" value="0" disabled><div class="playback"><div class="transport"><button id="dual-reset" aria-label="First comparison tick" disabled>↤</button><button id="dual-previous" aria-label="Previous comparison tick" disabled>←</button><button id="dual-play" class="play" disabled>Play both ▷</button><button id="dual-next" aria-label="Next comparison tick" disabled>→</button></div><span id="dual-tick">Tick 0 / 0</span><label class="speed-label" for="dual-speed">Comparison speed<select id="dual-speed"><option value="1000">Slow</option><option value="600" selected>Normal</option><option value="200">Fast</option></select></label></div></div>
+    </section>
     <div class="lower-grid">
-      <section class="panel code-panel"><div class="section-label"><span class="step-badge">02</span><h2>Follow the logic</h2><span>PSEUDOCODE</span></div><ol id="pseudocode" class="pseudocode"></ol><div class="complexity" id="complexity"></div><p class="counting-note">Counts track explicit key comparisons, not loop checks, arithmetic or hash lookups. A swap is two main-array writes. Auxiliary updates and trace storage are excluded. Zero comparisons does not mean zero work.</p></section>
-      <section class="panel compare-panel"><div class="section-label"><span class="step-badge">03</span><h2>Compare the work</h2></div><p class="muted-text">Same input. Fourteen sorts. Compare key operations; distribution sorts also do bucket/count work that these counters omit.</p><button class="secondary" id="compare">Compare all sorts ↗</button><div id="compare-results" aria-live="polite"><div class="compare-placeholder">A nearly sorted array can tell a different story.<br>Try it, then compare.</div></div><p id="compare-error" class="error" role="alert" hidden></p></section>
+      <section class="panel code-panel"><div class="section-label"><span class="step-badge">03</span><h2>Follow the logic</h2><span>PSEUDOCODE</span></div><ol id="pseudocode" class="pseudocode"></ol><div class="complexity" id="complexity"></div><p class="counting-note">Counts track explicit key comparisons, not loop checks, arithmetic or hash lookups. A swap is two main-array writes. Auxiliary updates and trace storage are excluded. Zero comparisons does not mean zero work.</p></section>
+      <section class="panel compare-panel"><div class="section-label"><span class="step-badge">04</span><h2>Compare the work</h2></div><p class="muted-text">Same input. Fourteen sorts. Compare key operations; distribution sorts also do bucket/count work that these counters omit.</p><button class="secondary" id="compare">Compare all sorts ↗</button><div id="compare-results" aria-live="polite"><div class="compare-placeholder">A nearly sorted array can tell a different story.<br>Try it, then compare.</div></div><p id="compare-error" class="error" role="alert" hidden></p></section>
     </div>
     <section class="panel reflection"><div><span class="eyebrow muted">MAKE THE LEARNING YOURS</span><h2>What did you notice?</h2><p>Predict, explain, then revisit. Notes stay in this browser.</p></div><div class="reflection-editor"><label class="sr-only" for="notes">Your learning notes</label><textarea id="notes" rows="3" placeholder="Why did this algorithm do more work on this input? What would change with duplicates?"></textarea><div><span id="note-status" role="status">Not saved yet</span><button class="secondary" id="save-notes">Save note</button><button id="export-notes">Download notes ↓</button></div></div></section>
-    <footer><strong>AlgoTrace</strong><span>Understand the process. Own the explanation.</span><span>Offline · Python standard library · v2.0.1</span></footer>
+    <footer><strong>AlgoTrace</strong><span>Understand the process. Own the explanation.</span><span>Offline · Python standard library · v2.1</span></footer>
   </main>
 </body>
 </html>

@@ -1,5 +1,13 @@
 # Changes
 
+## 2.1.0 — 28 October 2026
+
+- Added prediction questions before recorded comparisons/swaps, first-answer feedback, separate skips, replay protection and practice data in JSON exports.
+- Added synchronized playback for any two supported sorts, shared input/value scales, independent trace-cap warnings and final-frame holding.
+- Added six reproducible input presets with visible seed and size controls, including nearly sorted, duplicate-heavy and all-equal data.
+- Added pure JavaScript learning helpers and 13 Node test cases, served as a local module without a new runtime dependency.
+- Kept saved notes compatible, added keyboard focus handling for questions, and prevented optional preset constraints from blocking manual experiments.
+
 ## 2.0.1 — 28 October 2026
 
 - Replaced the sage/cream/orange palette with white panels, navy text and blue accents throughout the browser interface.

@@ -1,3 +1,3 @@
 """AlgoTrace: inspect algorithms through deterministic operation traces."""
 
-__version__ = "2.0.1"
+__version__ = "2.1.0"

@@ -38,7 +38,7 @@ class ServerTests(unittest.TestCase):
             return response.status, response.read(), response.headers
 
     def test_static_files_and_catalog(self):
-        for path, content_type in (("/", "text/html"), ("/app.js", "text/javascript"), ("/style.css", "text/css")):
+        for path, content_type in (("/", "text/html"), ("/app.js", "text/javascript"), ("/learning.mjs", "text/javascript"), ("/style.css", "text/css")):
             status, body, headers = self.fetch(path)
             self.assertEqual(status, 200)
             self.assertIn(content_type, headers["Content-Type"])

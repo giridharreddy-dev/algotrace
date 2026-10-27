@@ -1,4 +1,4 @@
-# Verification — AlgoTrace 2.0, 28 October 2026
+# Verification — AlgoTrace 2.1, 28 October 2026
 
 Environment: Windows, Python 3.14.3, a local in-app browser, and Node.js for JavaScript syntax checking. No third-party Python packages are required.
 
@@ -17,6 +17,23 @@ Environment: Windows, Python 3.14.3, a local in-app browser, and Node.js for Jav
 - CLI checks cover search, empty sort comparison, invalid input, category listing and parameterized array operations.
 
 `node --check algotrace/web/app.js`: passed.
+
+## Learning features — 2.1.0
+
+- **33 Python tests and 13 JavaScript tests passed.** The updated Windows `Run-Tests.bat` was executed through CMD, ran both suites and returned exit code 0.
+- JavaScript helpers test deterministic preset generation, shape properties, invalid seeds/sizes, prediction choice generation and grading, capped-event gaps, paired tick alignment and shorter-trace holding.
+- The new local `/learning.mjs` asset was included in the HTTP asset checks. Application JavaScript syntax and Python compilation checks passed.
+- In the browser, prediction mode stopped at the first comparison while the counters remained at zero. An incorrect first answer gave the right indices and explanation without credit; a correct next answer earned one credit; a skip increased only the skip counter.
+- Replaying answered/skipped events did not increase the score again. Restart reset the practice and trace position. Automatic playback paused at a prediction question. Disabling prediction mode restored ordinary scrubbing.
+- Two applications of Seeded random / size 12 / seed 77 produced the identical input. All-equal and nearly sorted presets produced their expected shapes. Size 33 produced an explanatory error. Invalid optional preset settings did not block a manually entered run.
+- Bubble sort and merge sort on `[3, 2, 1]` both displayed `[1, 2, 3]`. At shared tick 10 of 14, bubble sort held its completion frame while merge sort displayed event 10. Final counters matched the reference values.
+- Paired automatic playback advanced, pause stopped it, and changing the input cleared the old comparison. Empty paired input completed as `[]` on both sides. An unsupported counting-sort range displayed a side-specific error and recovered when the selection changed.
+- Saved version-1 demo notes remained available. No browser error-level logs were reported during the learning-feature checks.
+- All 32 algorithms were rerun through the updated interface in ordinary playback mode; every run completed and displayed its expected result representation. `BROWSER-CHECKS.json` now records this version-2.1 regression pass.
+- The exported JSON was downloaded and parsed; its practice object accurately contained one correct first answer out of one attempt and no skips from the demonstration run.
+- Prediction choices, feedback and stacked comparison cards were inspected at 390 pixels wide, with no document-level horizontal overflow. Desktop paired charts were inspected at 1280 × 900. Temporary viewport overrides were reset afterward.
+
+This practice score is local first-answer feedback, not an assessment rating. Paired ticks align recorded events, not time or equal units of CPU work.
 
 ## Browser results for version 2
 

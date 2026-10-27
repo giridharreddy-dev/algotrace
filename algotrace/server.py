@@ -11,6 +11,7 @@ from .algorithms import CATALOG, compare_sorts, run_algorithm
 WEB = Path(__file__).with_name("web")
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/learning.mjs": ("learning.mjs", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8")}
 MAX_BODY = 8192
 

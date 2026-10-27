@@ -10,6 +10,9 @@
 - Step through quicksort, heapsort, radix sort, Fibonacci search, Kadane's algorithm, two sum, sliding windows, LIS and more.
 - Inspect array snapshots, active indices, search intervals, pseudocode, operation counters and auxiliary working state such as DP tables.
 - Play, pause, scrub or reverse through a recorded trace.
+- Turn on **Prediction mode** to answer before revealing comparisons and swaps, with first-answer feedback and separate skip counts.
+- Build a **two-sort comparison** with synchronized playback, a shared input and value scale, and final-frame holding for the shorter trace.
+- Generate seeded random, nearly sorted, duplicate-heavy, all-equal, ascending or reverse-sorted input.
 - Compare 14 sorts on exactly the same input, with explicit handling of unsupported counting-sort ranges.
 - Try duplicates, negative values, empty input and reverse-sorted arrays.
 - Export a run as JSON. Write a learning note, save it in browser storage or download it as Markdown.
@@ -56,6 +59,32 @@ All searches except linear search require ascending input. Sort explicitly befor
 - **Fixed window:** use `1, 2, 3, 4` with window size 2. The best sum is 7 at indices 2–3.
 - **Rotation:** use `1, 2, 3, 4, 5` with positions 2. The result is `[4, 5, 1, 2, 3]`; negative positions rotate left.
 
+## Prediction mode
+
+![Prediction mode pauses before revealing the next operation](docs/prediction.jpg)
+
+1. Run an experiment, enable **Prediction mode**, then use **Next** or **Play**.
+2. Before a recorded comparison or swap, playback pauses and asks about the next indices, operation or comparison relation.
+3. The first choice is counted once. Feedback gives the correct answer, the recorded operation and the algorithm's strategy note.
+4. Choose **Continue to step** to reveal the event. **Skip and reveal** counts a skip, not a correct answer.
+5. **Restart questions** resets practice and returns to the first frame. Replaying an already answered or skipped step does not count it again.
+
+Scrubbing is disabled while prediction mode is enabled. Turn the mode off to explore freely. Questions are generated from the trace, not a separate secure assessment service. Questions and first-answer counts stay in memory for the current run, reset on a new run or changed input, and are included in the JSON run export. They are not a rating or proof of independent mastery. Traces with omitted-event gaps are not quizzed across those gaps.
+
+## Side-by-side playback
+
+![Two-sort synchronized playback](docs/paired.jpg)
+
+Choose **Left sort** and **Right sort**, then **Build comparison**. Both start from a snapshot of **Your numbers**, with the same value scale. The shared controls advance **one recorded event per algorithm per tick**; a completed trace holds its final frame while the other continues.
+
+Events vary by implementation and include narration as well as operations. This is not a stopwatch benchmark or equal-CPU-work simulation. A capped trace shows its own warning and jumps to the final completion frame. Changing input or either comparison selector clears the old pair. An unsupported counting-sort range reports an error instead of showing a partial or misleading pair. The original 14-sort count table remains available separately.
+
+## Reproducible input presets
+
+Expand **Input presets**, choose a shape, size **2–32** and seed **0–4294967295**, then click **Apply preset**. The same settings reproduce the same input. **New random seed** chooses a fresh seed and writes it into the field, so it can still be copied and reused.
+
+Nearly sorted input contains exactly one adjacent inversion of an ascending sequence. Duplicate-heavy input uses at most three distinct keys; all-equal input repeats one key. The generator is deterministic educational data generation, not cryptographic randomness. Preset size is separate from the manual input limit of 128 values. Optional preset settings do not constrain a manually entered experiment.
+
 ## Counting rules and limits
 
 - A comparison is one explicit conceptual three-way comparison of two keys or decision quantities. Loop checks, arithmetic, hash lookups, sorted-input validation and bookkeeping are not included. Zero comparisons does not mean zero work.
@@ -90,6 +119,14 @@ python -m algotrace run rotate --values "1,2,3,4,5" --target -2
 python -m unittest discover -s tests -v
 ```
 
+For the new pure JavaScript helpers, an optional Node.js installation can run:
+
+```powershell
+node --test tests/test_learning.mjs
+```
+
+`Run-Tests.bat` runs the Python suite and then runs the JavaScript tests when Node.js is available. Node.js is not needed to run the application itself.
+
 Tests cover seeded comparisons with Python's sorted output, searches against reference answers, exact operation counts, input immutability, trace caps, validation, real HTTP endpoints, static file boundaries and CLI behavior. Browser verification is recorded separately in `docs/VERIFICATION.md`.
 
 ## Project map
@@ -104,6 +141,7 @@ algotrace/
     index.html      # Browser lab
     style.css       # Responsive layout
     app.js          # Playback, input, comparison and notes
+    learning.mjs    # Pure prediction, preset and paired-frame helpers
 tests/              # Standard-library unittest suite
 docs/               # Screenshot, learning guide and verification
 ```
