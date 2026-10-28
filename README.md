@@ -18,6 +18,19 @@
 - Export a run as JSON. Write a learning note, save it in browser storage or download it as Markdown.
 - Run algorithms through the command line without using the browser.
 
+## Run in a browser
+
+The GitHub Pages edition runs the same Python algorithm source in a Web Worker using a self-hosted Pyodide runtime. A first run downloads the Python/WebAssembly runtime; after that, calculations run inside the browser. No Python API server, API key, or login is needed. This browser edition needs an initial network load and does not replace the original offline local-server workflow.
+
+Build the browser edition with Node.js and Python available:
+
+```powershell
+npm ci --ignore-scripts
+npm run build
+```
+
+The output is `dist-browser/`. The GitHub Pages workflow runs the existing Python tests, builds the browser edition, and deploys after pushes to main. The CLI and local server below remain unchanged.
+
 ## Run on Windows
 
 Requires **Python 3.10 or newer**. There are no third-party packages, API keys or accounts to configure.

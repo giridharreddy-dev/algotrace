@@ -1,0 +1,8 @@
+{
+  "name":"algotrace-browser-edition",
+  "version":"2.1.0",
+  "private":true,
+  "type":"module",
+  "scripts":{"build":"node browser/build-pages.mjs"},
+  "dependencies":{"pyodide":"314.0.7"}
+}
